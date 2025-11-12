@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Customer Booking | Azzaria Travel & Tours</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .page-wrap { max-width:1100px; margin:18px auto; padding:0 20px; font-family: Arial, Helvetica, sans-serif; color:var(--ink); }
+
+    .hero { margin: 18px 0; }
+    .hero .overlay h1 { margin:0; color:#1f2a33; text-align:center; }
+
+    .contact-card { background:var(--panel); border-radius:12px; padding:18px; box-shadow:var(--shadow); margin-bottom:18px; }
+    form.contact-form { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; }
+    form.contact-form input[type="text"],
+    form.contact-form input[type="email"] { padding:8px; font-size:14px; border:1px solid #e6e6e6; border-radius:8px; min-width:200px; }
+    form.contact-form button { padding:8px 12px; font-size:14px; border-radius:8px; border:none; cursor:pointer; background:#1f2a33; color:#fff; }
+    form.contact-form button.secondary { background:#e5e7eb; color:#111; }
+
+    .table-wrap { background:var(--panel); border-radius:12px; padding:12px; box-shadow:var(--shadow); }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border:1px solid #e8e4e1; padding:10px; text-align:left; }
+    th { background:#1f2a33; color:#fff; }
+    tr:nth-child(even) { background:#fbfaf9; }
+    .action-btn { background:#b22222; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
+    .action-btn:hover { background:#8b0000; }
+
+    @media (max-width:700px) {
+      form.contact-form { flex-direction:column; align-items:stretch; }
+      form.contact-form input { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation (shared ribbon from styles.css) -->
+  <header class="site-header">
+    <nav class="ribbon" role="navigation" aria-label="Main">
+      <a class="top" href="index.html">Home</a>
+      <a class="top" href="partner_links.html">Partner Links</a>
+      <a class="top" href="customer.html" aria-current="page">Customer Booking</a>
+      <a class="top" href="task_tracker.html">Notes/Task Tracker</a>
+      <a class="top" href="contacts.html">Contacts</a>
+    </nav>
+  </header>
+
+  <main class="page-wrap" role="main">
+    <section class="hero">
+      <div class="overlay">
+        <h1>Customer Contacts</h1>
+      </div>
+    </section>
+
+    <section class="contact-card" aria-labelledby="contact-form-heading">
+      <h2 id="contact-form-heading" style="margin:0 0 12px; text-align:center;">Add Contact</h2>
+
+      <form id="contactForm" class="contact-form" novalidate>
+        <input type="text" id="name" placeholder="Full Name" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="text" id="phone" placeholder="Phone Number" required />
+        <input type="text" id="notes" placeholder="Notes (optional)" />
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button type="submit">Add Contact</button>
+          <button type="button" id="resetBtn" class="secondary">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="table-wrap" aria-label="Saved contacts">
+      <table id="contactTable" aria-describedby="contacts-desc">
+        <caption id="contacts-desc" style="text-align:left; padding-bottom:8px; font-weight:700;">Saved Contacts</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Notes</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p style="text-align:center; padding:18px 0 30px; color:var(--muted); margin:0;">&copy; 2025 Azzaria Travel & Tours</p>
+  </footer>
+
+  <script>
+    // DOM refs
+    const form = document.getElementById('contactForm');
+    const tableBody = document.querySelector('#contactTable tbody');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // load contacts
+    let contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+    displayContacts();
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!name || !email || !phone) { alert('Please fill in Name, Email, and Phone.'); return; }
+      if (!emailRe.test(email)) { alert('Please enter a valid email address.'); return; }
+
+      contacts.push({ name, email, phone, notes });
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+      displayContacts();
+      form.reset();
+      document.getElementById('name').focus();
+    });
+
+    resetBtn.addEventListener('click', () => form.reset());
+
+    function displayContacts() {
+      tableBody.innerHTML = '';
+      contacts.forEach((c, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${escapeHtml(c.name)}</td>
+          <td>${escapeHtml(c.email)}</td>
+          <td>${escapeHtml(c.phone)}</td>
+          <td>${escapeHtml(c.notes)}</td>
+          <td><button class="action-btn" data-index="${i}">Delete</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+      tableBody.querySelectorAll('.action-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+        const idx = Number(ev.currentTarget.dataset.index);
+        deleteContact(idx);
+      }));
+    }
+
+    function deleteContact(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= contacts.length) return;
+      if (!confirm('Are you sure you want to delete this contact?')) return;
+      contacts.splice(index, 1);
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+      displayContacts();
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+  </script>
+</body>
+</html>
+

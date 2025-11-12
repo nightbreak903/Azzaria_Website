@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tasks & Planner | Azzaria Travel & Tours</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+
+    .page-header {
+      text-align: center;
+      margin: 18px auto 28px;
+      max-width: 1100px;
+      padding: 0 20px;
+    }
+
+
+
+    .page-wrap{ max-width:1100px; margin:18px auto; padding:0 16px 60px; font-family:Arial,Helvetica,sans-serif; color:var(--ink); }
+
+    /* Calendar */
+    .calendar-app{ margin-bottom:28px; }
+    .calendar-grid-wrap{ display:grid; grid-template-columns:1fr; gap:18px; }
+    @media(min-width:980px){ .calendar-grid-wrap{ grid-template-columns:2fr 1fr; } }
+    .calendar-panel{ background:var(--panel); border-radius:12px; padding:14px; box-shadow:var(--shadow); }
+    .controls{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+    .month-title{ font-weight:700; font-size:1.05rem; color:#1f2937; }
+    .calendar-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+    .weekday{ font-size:0.82rem; text-align:center; color:#374151; padding:6px 2px; }
+    .day-cell{ background:var(--panel); border-radius:10px; padding:8px; min-height:72px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; border:1px solid rgba(15,23,42,0.03); transition:all .12s ease; }
+    .day-cell.hoverable:hover{ background:#f8fafc; }
+    .day-cell.today{ border:2px solid #963c2c; font-weight:700; }
+    .day-cell.selected{ transform:scale(1.02); box-shadow:0 8px 18px rgba(0,0,0,0.06); background:linear-gradient(180deg,#fff8f3,#fff); }
+    .day-number{ font-weight:700; font-size:1rem; color:#111; }
+    .event-indicator{ width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-top:auto; }
+
+    .events-panel{ display:flex; flex-direction:column; gap:12px; }
+    .event-card{ background:var(--panel); border-radius:10px; padding:10px; border:1px solid rgba(0,0,0,0.04); box-shadow:0 6px 18px rgba(0,0,0,0.04); }
+    .event-meta{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:600; color:#7f1d1d; }
+    .event-desc{ margin-top:6px; color:#374151; font-size:0.95rem; }
+
+    /* Modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:80; pointer-events:none; opacity:0; transition:opacity .18s ease; }
+    .modal.open{ pointer-events:auto; opacity:1; }
+    .modal-card{ width:100%; max-width:520px; background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 20px 50px rgba(0,0,0,0.25); }
+
+    /* Kanban */
+    .kt-wrapper{ margin-top:28px; }
+    .kt-header{ display:flex; gap:12px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+    .kt-input{ flex:1; padding:10px 12px; border-radius:8px; border:1px solid #ddd; font-size:0.95rem; }
+    .kt-add{ padding:10px 14px; border-radius:8px; background:#e76f51; color:#fff; border:none; cursor:pointer; }
+    .kt-board{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    @media(max-width:900px){ .kt-board{ grid-template-columns:1fr; } }
+    .kt-column{ background:var(--panel); border-radius:10px; padding:12px; box-shadow:var(--shadow); min-height:160px; display:flex; flex-direction:column; }
+    .kt-container{ display:flex; flex-direction:column; gap:10px; min-height:90px; }
+    .kt-task{ background:#fff9f6; padding:10px; border-radius:8px; border:1px solid #eee; display:flex; justify-content:space-between; gap:8px; align-items:flex-start; cursor:grab; box-shadow:0 6px 14px rgba(0,0,0,0.04); }
+    .kt-task:active{ cursor:grabbing; }
+    .kt-text{ flex:1; min-width:0; color:#222; font-size:0.95rem; word-break:break-word; }
+    .kt-actions{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+    .kt-btn{ background:#f3f4f6; border:1px solid #e6e6e6; color:#111; padding:6px 8px; border-radius:6px; font-size:0.85rem; cursor:pointer; }
+    .kt-btn.danger{ background:transparent; color:#e11d48; border:0; font-weight:700; }
+    .kt-btn.small{ padding:4px 6px; font-size:0.78rem; }
+    .drop-highlight{ outline:3px dashed rgba(231,111,81,0.45); outline-offset:6px; }
+    .kt-toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:18px; background:#111; color:#fff; padding:10px 14px; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.3); display:none; z-index:9999; }
+
+    /* small utilities */
+    .btn{ padding:8px 12px; border-radius:8px; cursor:pointer; border:0; background:#e11d48; color:#fff; font-weight:700; }
+    .btn.secondary{ background:#f3f4f6; color:#111; border:1px solid #e6e6e6; font-weight:600; }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation (shared ribbon styling from styles.css) -->
+  <header class="site-header">
+    <nav class="ribbon" role="navigation" aria-label="Main">
+      <a class="top" href="index.html">Home</a>
+      <a class="top" href="partner_links.html">Partner Links</a>
+      <a class="top" href="customer.html">Customer Booking</a>
+      <a class="top" href="task_tracker.html" aria-current="page">Notes/Task Tracker</a>
+      <a class="top" href="contacts.html">Contacts</a>
+    </nav>
+  </header>
+
+  <section class="page-header">
+    <div class="overlay">
+      <h1>Tasks</h1>
+    </div>
+  </section>
+
+  <div class="page-wrap">
+    <!-- Calendar + Events -->
+    <div class="calendar-app">
+      <div class="calendar-grid-wrap">
+        <section class="calendar-panel" aria-label="Calendar">
+          <div class="controls">
+            <button id="cal-prev" class="btn secondary" title="Previous month">◀</button>
+            <div class="month-title" id="cal-month-title">Month Year</div>
+            <button id="cal-next" class="btn secondary" title="Next month">▶</button>
+          </div>
+
+          <div class="calendar-grid" id="cal-grid" role="grid" aria-label="Calendar grid">
+            <div class="weekday">Sun</div><div class="weekday">Mon</div><div class="weekday">Tue</div>
+            <div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div>
+            <!-- day cells injected here -->
+          </div>
+        </section>
+
+        <aside class="calendar-panel events-panel" aria-label="Events">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong id="ev-selected-label">Selected date</strong>
+              <div id="ev-tz" style="font-size:.85rem;color:#6b7280;margin-top:4px"></div>
+            </div>
+            <button id="ev-open" class="btn">Add</button>
+          </div>
+
+          <div id="ev-list" style="margin-top:14px"></div>
+          <p id="ev-none" style="color:#6b7280;margin-top:12px;display:none">No events for this date.</p>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Kanban -->
+    <div class="kt-wrapper" aria-label="Kanban board area">
+      <div class="kt-header">
+        <input id="kt-input" class="kt-input" type="text" placeholder="Enter new task description and press Add or Enter" />
+        <button id="kt-add" class="kt-add">Add</button>
+      </div>
+
+      <div class="kt-board" id="kt-board">
+        <div class="kt-column" data-status="todo" aria-labelledby="todo-heading">
+          <h3 id="todo-heading">To Do</h3>
+          <div id="kt-todo" class="kt-container" aria-live="polite"></div>
+        </div>
+
+        <div class="kt-column" data-status="in-progress" aria-labelledby="inprog-heading">
+          <h3 id="inprog-heading">In Progress</h3>
+          <div id="kt-inprog" class="kt-container" aria-live="polite"></div>
+        </div>
+
+        <div class="kt-column" data-status="done" aria-labelledby="done-heading">
+          <h3 id="done-heading">Done</h3>
+          <div id="kt-done" class="kt-container" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div> <!-- .page-wrap -->
+
+  <!-- Calendar modal -->
+  <div class="modal" id="cal-modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3 id="cal-modal-title">Add Event</h3>
+      <form id="cal-form">
+        <input type="hidden" id="cal-id" />
+        <div style="margin-top:10px"><label>Date</label><input id="cal-date" class="input" type="date" required /></div>
+        <div style="margin-top:8px"><label>Time</label><input id="cal-time" class="input" type="time" /></div>
+        <div style="margin-top:8px"><label>Recurrence</label>
+          <select id="cal-recur" class="input">
+            <option value="">None</option><option value="DAILY">Daily</option><option value="WEEKLY">Weekly</option><option value="MONTHLY">Monthly</option>
+          </select>
+        </div>
+        <div style="margin-top:8px"><label>Description</label><textarea id="cal-desc" class="input" rows="3" required></textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+          <button type="button" id="cal-cancel" class="btn secondary">Cancel</button>
+          <button type="submit" class="btn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast containers -->
+  <div id="cal-toast" class="kt-toast" role="status" aria-live="polite"></div>
+  <div id="kt-toast" class="kt-toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ===== Utilities =====
+    const safeUID = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8));
+    const escapeText = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // ===== Calendar Module =====
+    (function CalendarModule(){
+      const STORAGE = 'planner_events_v2';
+      let events = [];
+      let current = new Date();
+      let selected = new Date();
+
+      // DOM refs
+      const calGrid = document.getElementById('cal-grid');
+      const monthTitle = document.getElementById('cal-month-title');
+      const prevBtn = document.getElementById('cal-prev');
+      const nextBtn = document.getElementById('cal-next');
+      const evOpen = document.getElementById('ev-open');
+      const evList = document.getElementById('ev-list');
+      const evNone = document.getElementById('ev-none');
+      const evSelectedLabel = document.getElementById('ev-selected-label');
+      const evTz = document.getElementById('ev-tz');
+
+      const modal = document.getElementById('cal-modal');
+      const form = document.getElementById('cal-form');
+      const calId = document.getElementById('cal-id');
+      const calDate = document.getElementById('cal-date');
+      const calTime = document.getElementById('cal-time');
+      const calRecur = document.getElementById('cal-recur');
+      const calDesc = document.getElementById('cal-desc');
+      const calCancel = document.getElementById('cal-cancel');
+      const toast = document.getElementById('cal-toast');
+
+      // storage
+      function load(){ try{ const raw = localStorage.getItem(STORAGE); events = raw ? JSON.parse(raw) : []; }catch(e){ events=[]; } }
+      function save(){ localStorage.setItem(STORAGE, JSON.stringify(events)); }
+
+      // helpers
+      const keyFor = d => d.toISOString().slice(0,10);
+      const formatLong = d => d.toLocaleString(undefined,{ weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      function daysInMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0).getDate(); }
+      function firstWeekday(date){ return new Date(date.getFullYear(), date.getMonth(), 1).getDay(); }
+
+      // recurrence expansion (simple)
+      function expandRecurrence(ev, start, end){
+        const occ = [];
+        if(!ev.recurrence) return occ;
+        let cur = new Date(ev.date + 'T00:00:00');
+        const rule = ev.recurrence;
+        while(cur <= end){
+          if(cur >= start) occ.push({ ...ev, date: cur.toISOString().slice(0,10) });
+          if(rule === 'DAILY') cur.setDate(cur.getDate()+1);
+          else if(rule === 'WEEKLY') cur.setDate(cur.getDate()+7);
+          else if(rule === 'MONTHLY') cur.setMonth(cur.getMonth()+1);
+          else break;
+        }
+        return occ;
+      }
+
+      // render calendar
+      function renderCalendar(){
+        if(!calGrid) return;
+        monthTitle.textContent = current.toLocaleString(undefined,{ month:'long', year:'numeric' });
+        calGrid.querySelectorAll('.day-cell').forEach(n=>n.remove());
+        const first = firstWeekday(current);
+        for(let i=0;i<first;i++){
+          const e = document.createElement('div'); e.className='day-cell'; calGrid.appendChild(e);
+        }
+        const dim = daysInMonth(current);
+        const todayKey = keyFor(new Date());
+        const selKey = keyFor(selected);
+
+        const startMonth = new Date(current.getFullYear(), current.getMonth(), 1);
+        const endMonth = new Date(current.getFullYear(), current.getMonth(), dim, 23,59,59);
+        const occs = [];
+        events.forEach(ev => {
+          if(ev.recurrence) expandRecurrence(ev, startMonth, endMonth).forEach(o=>occs.push(o));
+          else occs.push(ev);
+        });
+        const map = occs.reduce((a,o)=>{ a[o.date] = (a[o.date]||0)+1; return a; }, {});
+
+        for(let d=1; d<=dim; d++){
+          const dt = new Date(current.getFullYear(), current.getMonth(), d);
+          const k = keyFor(dt);
+          const isToday = k === todayKey;
+          const isSel = k === selKey;
+          const cell = document.createElement('div');
+          cell.className = 'day-cell ' + (isSel ? 'selected' : 'hoverable') + (isToday ? ' today' : '');
+          cell.dataset.date = k;
+          cell.addEventListener('click', ()=>{ selected = dt; renderCalendar(); });
+          const num = document.createElement('div'); num.className='day-number'; num.textContent = d;
+          cell.appendChild(num);
+          if(map[k]){ const dot = document.createElement('div'); dot.className='event-indicator'; cell.appendChild(dot); }
+          calGrid.appendChild(cell);
+        }
+        renderEventsForSelected();
+      }
+
+      function renderEventsForSelected(){
+        const key = keyFor(selected);
+        evSelectedLabel.textContent = formatLong(selected);
+        evTz.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        evList.innerHTML = '';
+        const start = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 0,0,0);
+        const end = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 23,59,59);
+        const list = [];
+        events.forEach(ev => {
+          if(ev.recurrence) expandRecurrence(ev, start, end).forEach(o=>list.push(o));
+          else if(ev.date === key) list.push(ev);
+        });
+        if(list.length === 0){ evNone.style.display = 'block'; return; }
+        evNone.style.display = 'none';
+        list.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+        list.forEach(ev=>{
+          const card = document.createElement('div'); card.className='event-card';
+          card.innerHTML = `<div class="event-meta"><div>${escapeText(ev.time||'')}</div><div><button data-action="edit" data-id="${ev.id}" class="btn secondary small">Edit</button> <button data-action="delete" data-id="${ev.id}" class="btn secondary small">Delete</button></div></div><div class="event-desc">${escapeText(ev.description||'')}</div>`;
+          evList.appendChild(card);
+        });
+        evList.querySelectorAll('[data-action="edit"]').forEach(b=>b.addEventListener('click', ()=> openModal(b.dataset.id)));
+        evList.querySelectorAll('[data-action="delete"]').forEach(b=>b.addEventListener('click', ()=> deleteEvent(b.dataset.id)));
+      }
+
+      // modal ops
+      function openModal(id=null){
+        calId.value = id || '';
+        if(id){
+          const it = events.find(e=>e.id===id);
+          if(it){ document.getElementById('cal-modal-title').textContent='Edit Event'; calDate.value = it.date; calTime.value = it.time || ''; calRecur.value = it.recurrence || ''; calDesc.value = it.description || ''; }
+        } else {
+          document.getElementById('cal-modal-title').textContent='Add Event'; calDate.value = keyFor(selected); calTime.value='09:00'; calRecur.value=''; calDesc.value='';
+        }
+        modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+      }
+      function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); form.reset(); }
+
+      // CRUD
+      function addEvent(data){ events.push({ id:safeUID(), ...data }); save(); renderCalendar(); showCalToast('Event added'); }
+      function updateEvent(id,data){ const i=events.findIndex(e=>e.id===id); if(i>-1){ events[i] = {...events[i], ...data}; save(); renderCalendar(); showCalToast('Event updated'); } }
+      function deleteEvent(id){ const before = events.length; events = events.filter(e=>e.id!==id); if(events.length < before){ save(); renderCalendar(); showCalToast('Event deleted'); } }
+
+      // form submit
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const id = calId.value;
+        const payload = { date: calDate.value, time: calTime.value, recurrence: calRecur.value || '', description: calDesc.value.trim() };
+        if(!payload.date || !payload.description){ showCalToast('Date and description required'); return; }
+        if(id) updateEvent(id, payload); else addEvent(payload);
+        closeModal();
+      });
+
+      // navigation wiring
+      prevBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth()-1); if(current.getMonth()!==selected.getMonth()||current.getFullYear()!==selected.getFullYear()) selected=new Date(current.getFullYear(), current.getMonth(),1); renderCalendar(); });
+      nextBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth()+1); if(current.getMonth()!==selected.getMonth()||current.getFullYear()!==selected.getFullYear()) selected=new Date(current.getFullYear(), current.getMonth(),1); renderCalendar(); });
+      evOpen.addEventListener('click', ()=> openModal(null));
+      calCancel.addEventListener('click', closeModal);
+      document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modal.classList.contains('open')) closeModal(); });
+
+      // toast
+      let calToastTimer=0;
+      function showCalToast(msg,ms=1600){ toast.innerText = msg; toast.style.display='block'; clearTimeout(calToastTimer); calToastTimer=setTimeout(()=>toast.style.display='none',ms); }
+
+      // init
+      function init(){ load(); renderCalendar(); }
+      window.calendarModule = { openModal, addEvent, updateEvent, deleteEvent };
+      init();
+    })();
+
+    /* Kanban Module */
+    (function KanbanModule(){
+      const STORAGE = 'kt_tasks_v1';
+      const STATUS_ORDER = ['todo','in-progress','done'];
+      let tasks = [];
+
+      function load(){ try{ const r = localStorage.getItem(STORAGE); tasks = r ? JSON.parse(r) : [{ id:safeUID(), content:'Welcome — try dragging me!', status:'todo' }]; }catch(e){ tasks=[]; } }
+      function save(){ localStorage.setItem(STORAGE, JSON.stringify(tasks)); }
+
+      const refs = {
+        input: () => document.getElementById('kt-input'),
+        addBtn: () => document.getElementById('kt-add'),
+        todo: () => document.getElementById('kt-todo'),
+        inprog: () => document.getElementById('kt-inprog'),
+        done: () => document.getElementById('kt-done'),
+        toast: () => document.getElementById('kt-toast')
+      };
+
+      function containerFor(s){ return s==='todo'? refs.todo() : s==='in-progress'? refs.inprog() : refs.done(); }
+
+      function render(){
+        refs.todo().innerHTML=''; refs.inprog().innerHTML=''; refs.done().innerHTML='';
+        tasks.forEach(t => { const c = containerFor(t.status); if(c) c.appendChild(makeTaskEl(t)); });
+      }
+
+      function makeTaskEl(task){
+        const el = document.createElement('div'); el.className='kt-task'; el.draggable=true; el.dataset.taskId=task.id; el.tabIndex=0;
+        const text = document.createElement('div'); text.className='kt-text'; text.textContent = task.content; el.appendChild(text);
+        const actions = document.createElement('div'); actions.className='kt-actions';
+        const left = document.createElement('button'); left.className='kt-btn small'; left.textContent='←'; left.title='Move left'; left.addEventListener('click', e=>{ e.stopPropagation(); moveTask(task.id,-1); });
+        const right = document.createElement('button'); right.className='kt-btn small'; right.textContent='→'; right.title='Move right'; right.addEventListener('click', e=>{ e.stopPropagation(); moveTask(task.id,1); });
+        const del = document.createElement('button'); del.className='kt-btn danger small'; del.textContent='✕'; del.title='Delete'; del.addEventListener('click', e=>{ e.stopPropagation(); deleteTask(task.id); });
+        actions.appendChild(left); actions.appendChild(right); actions.appendChild(del); el.appendChild(actions);
+
+        el.addEventListener('dragstart', dragStart);
+        el.addEventListener('dragend', dragEnd);
+        el.addEventListener('keydown', e=>{ if(e.key==='ArrowLeft'){ e.preventDefault(); moveTask(task.id,-1);} if(e.key==='ArrowRight'){ e.preventDefault(); moveTask(task.id,1);} if(e.key==='Enter'){ e.preventDefault(); editInline(task.id,text);} });
+        el.addEventListener('dblclick', ()=> editInline(task.id,text));
+        return el;
+      }
+
+      function addFromInput(){
+        const v = refs.input().value.trim(); if(!v){ showKTToast('Please enter a description'); return; }
+        tasks.push({ id:safeUID(), content:v, status:'todo' }); refs.input().value=''; save(); render(); showKTToast('Task added');
+      }
+      function deleteTask(id){
+        const i = tasks.findIndex(t=>t.id===id); if(i===-1) return; const rem = tasks.splice(i,1)[0]; save(); render();
+        const undo = document.createElement('button'); undo.className='kt-btn small'; undo.textContent='Undo'; undo.addEventListener('click', ()=>{ tasks.splice(i,0,rem); save(); render(); hideKTToast(); });
+        showKTToast('Task deleted',4000,undo);
+      }
+      function moveTask(id,dir){
+        const i = tasks.findIndex(t=>t.id===id); if(i===-1) return; const pos = STATUS_ORDER.indexOf(tasks[i].status); let n = Math.max(0, Math.min(STATUS_ORDER.length-1, pos+dir)); tasks[i].status = STATUS_ORDER[n]; save(); render();
+      }
+      function editInline(id,textNode){
+        const i = tasks.findIndex(t=>t.id===id); if(i===-1) return; const old = tasks[i].content; const ta = document.createElement('textarea'); ta.value=old; ta.style.width='100%'; ta.style.padding='8px'; ta.style.borderRadius='6px'; ta.style.border='1px solid #ddd'; textNode.replaceWith(ta); ta.focus(); ta.select();
+        function finish(save){ if(save){ tasks[i].content = ta.value.trim() || old; save(); render(); } else render(); }
+        ta.addEventListener('blur', ()=> finish(true)); ta.addEventListener('keydown', e=>{ if(e.key==='Escape') finish(false); if(e.key==='Enter' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); finish(true); } });
+      }
+
+      // drag & drop
+      let currentDragId = null;
+      function dragStart(e){ currentDragId = e.currentTarget.dataset.taskId; try{ e.dataTransfer.setData('text/plain', currentDragId); }catch(err){} e.dataTransfer.effectAllowed='move'; setTimeout(()=> e.currentTarget.style.opacity='0.4',0); }
+      function dragEnd(e){ e.currentTarget.style.opacity=''; currentDragId=null; }
+      function onDragOver(e){ e.preventDefault(); e.currentTarget.classList.add('drop-highlight'); e.dataTransfer.dropEffect='move'; }
+      function onDragLeave(e){ e.currentTarget.classList.remove('drop-highlight'); }
+      function onDrop(e){
+        e.preventDefault(); e.currentTarget.classList.remove('drop-highlight');
+        const status = e.currentTarget.closest('[data-status]')?.dataset?.status || e.currentTarget.dataset?.status;
+        const id = (e.dataTransfer && e.dataTransfer.getData && e.dataTransfer.getData('text/plain')) || currentDragId;
+        if(!id||!status) return; const idx = tasks.findIndex(t=>t.id===id); if(idx===-1) return; tasks[idx].status = status; save(); render();
+      }
+
+      // toasts
+      let ktTimer = 0;
+      function showKTToast(msg,ms=1600,extra){ const t = refs.toast(); t.innerHTML=''; const s=document.createElement('span'); s.textContent=msg; t.appendChild(s); if(extra) t.appendChild(extra); t.style.display='block'; clearTimeout(ktTimer); ktTimer=setTimeout(hideKTToast,ms); }
+      function hideKTToast(){ const t=refs.toast(); t.style.display='none'; t.innerHTML=''; }
+
+      // wiring
+      function wire(){
+        [refs.todo(), refs.inprog(), refs.done()].forEach(c=>{
+          c.addEventListener('dragover', onDragOver);
+          c.addEventListener('dragleave', onDragLeave);
+          c.addEventListener('drop', onDrop);
+          const sec = c.closest('[data-status]');
+          if(sec){
+            sec.addEventListener('dragover', e=>{ e.preventDefault(); sec.classList.add('drop-highlight'); });
+            sec.addEventListener('dragleave', ()=> sec.classList.remove('drop-highlight'));
+            sec.addEventListener('drop', e=>{
+              e.preventDefault(); sec.classList.remove('drop-highlight');
+              const id = (e.dataTransfer && e.dataTransfer.getData && e.dataTransfer.getData('text/plain')) || currentDragId;
+              const status = sec.dataset.status; if(!id) return; const idx = tasks.findIndex(t=>t.id===id); if(idx!==-1){ tasks[idx].status = status; save(); render(); }
+            });
+          }
+        });
+        refs.addBtn().addEventListener('click', addFromInput);
+        refs.input().addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addFromInput(); } });
+      }
+
+      // init
+      function init(){ load(); render(); wire(); }
+      if(document.readyState === 'loading') window.addEventListener('DOMContentLoaded', init); else init();
+
+      window.kanbanModule = { addFromInput, deleteTask, moveTask };
+    })();
+  </script>
+
+      <footer>
+        <p>&copy; 2025 Azzaria Travel & Tours</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Partner Links | Azzaria Travel & Tours</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f8f4f2;
+      color: #333;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    .page-header {
+      text-align: center;
+      margin: 18px auto 28px;
+      max-width: 1100px;
+      padding: 0 20px;
+    }
+
+    .link-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto 40px;
+      padding: 0 20px;
+      align-items: flex-start;
+    }
+
+    .link-card {
+      background-color: white;
+      border: 2px solid #9d8189;
+      border-radius: 12px;
+      width: 260px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    }
+
+    .link-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+    }
+
+    .link-card a {
+      text-decoration: none;
+      color: #9d8189;
+      font-weight: bold;
+      font-size: 18px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .link-card p {
+      font-size: 14px;
+      color: #555;
+      margin: 0;
+    }
+
+
+    @media (max-width: 640px) {
+      .link-card { width: calc(50% - 20px); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top Navigation -->
+  <header class="site-header">
+    <nav class="ribbon" role="navigation" aria-label="Main">
+      <a class="top" href="index.html">Home</a>
+      <a class="top" href="partner_links.html" aria-current="page">Partner Links</a>
+      <a class="top" href="customer.html">Customer Booking</a>
+      <a class="top" href="task_tracker.html">Notes/Task Tracker</a>
+      <a class="top" href="contacts.html">Contacts</a>
+    </nav>
+  </header>
+
+  <header class="page-header">
+    <h1>Partner Links</h1>
+    <p>Access Azzaria’s trusted airline partners quickly and easily.</p>
+  </header>
+
+  <main class="link-container" role="main">
+    <div class="link-card">
+      <a href="https://ph.via.com/_login" target="_blank" rel="noopener">Via</a>
+      <p>Log in to manage travel bookings and partner services.</p>
+    </div>
+
+    <div class="link-card">
+      <a href="https://flights.philippineairlines.com/en-ph/" target="_blank" rel="noopener">Philippine Airlines</a>
+      <p>Book and manage flights with the country’s flagship carrier.</p>
+    </div>
+
+    <div class="link-card">
+      <a href="https://www.cebupacificair.com/zh-TW/" target="_blank" rel="noopener">Cebu Pacific</a>
+      <p>Book affordable domestic and international flights.</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Azzaria Travel & Tours</p>
+  </footer>
+</body>
+</html>

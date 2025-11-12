@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Home | Azzaria Travel & Tours</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+
+<body>
+
+  <!-- Top Navigation -->
+  <header class="site-header">
+    <nav class="ribbon">
+      <a class="top" href="index.html">Home</a>
+      <a class="top" href="partner_links.html">Partner Links</a>
+      <a class="top" href="customer.html">Customer Booking</a>
+      <a class="top" href="task_tracker.html">Notes/Task Tracker</a>
+      <a class="top" href="contacts.html">Contacts</a>
+    </nav>
+  </header>
+
+  <main class="planner-home">
+
+    <section class="hero">
+            <div class="overlay">
+                <h1>Live with No Excuses, Travel with No Regrets.</h1>
+            </div>
+    </section>
+
+
+    <!-- Top Section: Five planner tiles -->
+    <section class="planner-tiles">
+      <a class="tile" href="index.html">
+        <div class="tile-label">Home</div>
+      </a>
+      <a class="tile" href="partner_links.html">
+        <div class="tile-label">Partner Links</div>
+      </a>
+      <a class="tile" href="customer.html">
+        <div class="tile-label">Customer Booking</div>
+      </a>
+      <a class="tile" href="task_tracker.html">
+        <div class="tile-label">Notes</div>
+      </a>
+      <a class="tile" href="contacts.html">
+        <div class="tile-label">Contacts</div>
+      </a>
+    </section>
+
+    <!-- Middle Section: Clock + Weather -->
+    <section class="mid-band">
+      <div class="clock-card">
+        <div class="clock-time" id="clock">2:56 PM</div>
+        <div class="clock-sub">Philippines</div>
+      </div>
+
+      <div class="weather-card">
+        <div class="weather-header">
+          <div class="weather-city">Philippines</div>
+          <div class="weather-current">62°F · Partly Cloudy</div>
+        </div>
+        <div class="weather-forecast">
+          <div class="day">
+            <div class="name">Thu</div>
+            <div class="icon">⛅</div>
+            <div class="temps">64°F / 56°F</div>
+          </div>
+          <div class="day">
+            <div class="name">Fri</div>
+            <div class="icon">☀️</div>
+            <div class="temps">67°F / 57°F</div>
+          </div>
+          <div class="day">
+            <div class="name">Sat</div>
+            <div class="icon">☀️</div>
+            <div class="temps">70°F / 58°F</div>
+          </div>
+          <div class="day">
+            <div class="name">Sun</div>
+            <div class="icon">☀️</div>
+            <div class="temps">71°F / 59°F</div>
+          </div>
+          <div class="day">
+            <div class="name">Mon</div>
+            <div class="icon">☀️</div>
+            <div class="temps">72°F / 60°F</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Section: Quotes, Testimonials, Checklist -->
+    <section class="bottom-grid">
+      <!-- Daily Bible Quote -->
+      <div class="card quotes-card">
+        <div class="card-title">Daily Bible Quote</div>
+        <blockquote class="quote">“The Lord is my shepherd; I shall not want.” — Psalm 23:1</blockquote>
+        <blockquote class="quote">“I can do all things through Christ who strengthens me.” — Philippians 4:13</blockquote>
+      </div>
+
+      <!-- Customer Testimonials -->
+      <div class="card testimonials-card">
+        <div class="card-title">Customer Testimonials</div>
+        <div class="testimonial">
+          <p>“This planner has completely changed the way I organize my life!”</p>
+          <span>- Sarah M.</span>
+        </div>
+        <div class="testimonial">
+          <p>“I love the clean design and motivational quotes. Highly recommended.”</p>
+          <span>- James R.</span>
+        </div>
+      </div>
+
+      <!-- Travel Checklist -->
+      <div class="card checklist-card">
+        <div class="card-title">Travel Checklist</div>
+        <ul class="checklist">
+          <li><label><input type="checkbox"> Passport</label></li>
+          <li><label><input type="checkbox"> Flight tickets</label></li>
+          <li><label><input type="checkbox"> Hotel booking</label></li>
+          <li><label><input type="checkbox"> Travel insurance</label></li>
+          <li><label><input type="checkbox"> Charger & adapters</label></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function updateClock() {
+      const el = document.getElementById('clock');
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      el.textContent = `${hours}:${minutes} ${ampm}`;
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+  </script>
+
+
+    <footer>
+        <p>&copy; 2025 Azzaria Travel & Tours</p>
+    </footer>
+
+</body>
+</html>
